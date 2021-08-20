@@ -4,25 +4,56 @@ using UnityEngine;
 
 public class FloorControllerAnson : MonoBehaviour
 {
+    public float rotationSpeed = 40f;
+    void Update() {
+        float tiltAroundX = Input.GetAxis("Vertical");
+        float tiltAroundZ = -Input.GetAxis("Horizontal");
 
-    public float torque;
-    public Rigidbody rb;
+        Vector3 playerPosition = GameObject.Find("Player").transform.position;
+        transform.RotateAround(playerPosition, new Vector3(tiltAroundX, 0, tiltAroundZ), rotationSpeed * Time.deltaTime);
 
-    void Start() {
-        rb = GetComponent<Rigidbody>();
+        float zeroingThreshold = 0.001f;
+        if (tiltAroundX == 0) {
+            returnToZeroX(playerPosition, rotationSpeed, zeroingThreshold);
+        }
+
+        if (tiltAroundZ == 0) {
+            returnToZeroZ(playerPosition, rotationSpeed, zeroingThreshold);
+        }
+
+        Quaternion currentRotation = transform.rotation;
+        transform.rotation = new Quaternion(currentRotation.x, 0, currentRotation.z, currentRotation.w);
     }
 
-    void FixedUpdate() {
-        float tiltHorizontal = Input.GetAxis("Horizontal");
-        float tiltVertical = Input.GetAxis("Vertical");
-        // Vector3 turn = new Vector3(tiltHorizontal, 0.0f, tiltVertical);
-        // rb.AddRelativeTorque(tiltHorizontal * torque, 0.0f, tiltVertical * torque, ForceMode.Acceleration);
-	// rb.AddTorque(transform.up * torque * tiltHorizontal);
-	// rb.AddRelativeTorque(100.0f, 0.0f, 0.0f, ForceMode.Acceleration);
-	// rb.Rotate(0, Input.GetAxis("Horizontal")*Time.deltaTime*torque, 0);
+    void returnToZeroX(Vector3 playerPosition, float returnSpeed, float zeroingThreshold) {
+        Quaternion currentRotation = transform.rotation;
 
-	rb.angularVelocity = Vector3.zero;
-        rb.AddTorque(tiltVertical * torque, 0.0f, tiltHorizontal * torque * -1.0f);
+        if (currentRotation.x < zeroingThreshold && currentRotation.x > -zeroingThreshold) {
+            transform.rotation = new Quaternion(0, currentRotation.y, currentRotation.z, currentRotation.w);
+        } else {
+            if (currentRotation.x > 0) {
+                transform.RotateAround(playerPosition, new Vector3(-1, 0, 0), returnSpeed * Time.deltaTime);
+            }
+            
+            if (currentRotation.x < 0) {
+                transform.RotateAround(playerPosition, new Vector3(1, 0, 0), returnSpeed * Time.deltaTime);
+            }
+        }
     }
 
+    void returnToZeroZ(Vector3 playerPosition, float returnSpeed, float zeroingThreshold) {
+        Quaternion currentRotation = transform.rotation;
+
+        if (currentRotation.z < zeroingThreshold && currentRotation.z > -zeroingThreshold) {
+            transform.rotation = new Quaternion(currentRotation.x, currentRotation.y, 0, currentRotation.w);
+        } else {
+            if (currentRotation.z > 0) {
+                transform.RotateAround(playerPosition, new Vector3(0, 0, -1), returnSpeed * Time.deltaTime);
+            }
+            
+            if (currentRotation.z < 0) {
+                transform.RotateAround(playerPosition, new Vector3(0, 0, 1), returnSpeed * Time.deltaTime);
+            }
+        }
+    }
 }
